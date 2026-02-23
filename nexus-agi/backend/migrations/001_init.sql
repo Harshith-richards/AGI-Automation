@@ -1,0 +1,37 @@
+CREATE TABLE IF NOT EXISTS tasks (
+  id SERIAL PRIMARY KEY,
+  goal TEXT NOT NULL,
+  status VARCHAR(32) NOT NULL DEFAULT 'queued',
+  priority INT NOT NULL DEFAULT 5,
+  planner VARCHAR(32) NOT NULL DEFAULT 'react',
+  result JSONB,
+  error TEXT,
+  created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMP NOT NULL DEFAULT NOW()
+);
+CREATE TABLE IF NOT EXISTS agent_logs (
+  id SERIAL PRIMARY KEY,
+  task_id INT NOT NULL REFERENCES tasks(id),
+  agent_name VARCHAR(64) NOT NULL,
+  message TEXT NOT NULL,
+  level VARCHAR(16) NOT NULL DEFAULT 'info',
+  payload JSONB,
+  created_at TIMESTAMP NOT NULL DEFAULT NOW()
+);
+CREATE TABLE IF NOT EXISTS memories (
+  id SERIAL PRIMARY KEY,
+  memory_type VARCHAR(32) NOT NULL,
+  content JSONB NOT NULL,
+  embedding JSONB,
+  created_at TIMESTAMP NOT NULL DEFAULT NOW()
+);
+CREATE TABLE IF NOT EXISTS tools (
+  id SERIAL PRIMARY KEY,
+  name VARCHAR(128) UNIQUE NOT NULL,
+  description TEXT NOT NULL,
+  schema JSONB NOT NULL,
+  version VARCHAR(32) NOT NULL DEFAULT '1.0.0',
+  success_count INT NOT NULL DEFAULT 0,
+  failure_count INT NOT NULL DEFAULT 0,
+  enabled BOOLEAN NOT NULL DEFAULT TRUE
+);
