@@ -1,0 +1,293 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>NEXUS-AGI Preview</title>
+    <style>
+      :root {
+        --bg: #0b1020;
+        --panel: #111936;
+        --panel-2: #17224a;
+        --text: #e8ecff;
+        --muted: #9fb0e4;
+        --ok: #23c55e;
+        --warn: #f59e0b;
+        --bad: #ef4444;
+        --accent: #60a5fa;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+        background: linear-gradient(120deg, #090f1d, #0e1734 50%, #101b3f);
+        color: var(--text);
+      }
+      .app { max-width: 1400px; margin: 0 auto; padding: 20px; }
+      .header {
+        display: flex; justify-content: space-between; align-items: center;
+        padding: 14px 18px; background: rgba(17, 25, 54, 0.85); border: 1px solid #29386b;
+        border-radius: 14px; position: sticky; top: 10px; backdrop-filter: blur(8px); z-index: 5;
+      }
+      .title { font-size: 24px; font-weight: 800; letter-spacing: 0.2px; }
+      .subtitle { color: var(--muted); font-size: 13px; }
+      .badge { padding: 6px 10px; border-radius: 999px; background: #1e2f63; border: 1px solid #37539b; color: #cfe0ff; font-size: 12px; }
+
+      .tabs { display: flex; gap: 8px; margin: 14px 0 20px; flex-wrap: wrap; }
+      .tab {
+        border: 1px solid #304277; color: #dce6ff; background: #14214a;
+        padding: 10px 14px; border-radius: 10px; cursor: pointer; font-size: 14px;
+      }
+      .tab.active { background: #1e3270; border-color: #5d7fd5; }
+
+      .grid { display: grid; gap: 14px; }
+      .grid.cols-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+      .grid.cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+      .grid.cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      @media (max-width: 1100px) { .grid.cols-4, .grid.cols-3 { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+      @media (max-width: 760px) { .grid.cols-4, .grid.cols-3, .grid.cols-2 { grid-template-columns: 1fr; } }
+
+      .card {
+        background: linear-gradient(160deg, rgba(23,34,74,0.95), rgba(17,25,54,0.95));
+        border: 1px solid #2a3a6d;
+        border-radius: 14px;
+        padding: 14px;
+      }
+      .card h3 { margin: 0 0 8px; font-size: 16px; }
+      .muted { color: var(--muted); }
+      .kpi { font-size: 26px; font-weight: 800; margin: 8px 0 4px; }
+      .status-row { display: flex; align-items: center; justify-content: space-between; margin: 10px 0; }
+      .dot { width: 10px; height: 10px; border-radius: 50%; margin-right: 8px; display: inline-block; }
+      .ok { background: var(--ok); }
+      .warn { background: var(--warn); }
+      .bad { background: var(--bad); }
+      .row { display: flex; align-items: center; gap: 8px; }
+      .section { display: none; }
+      .section.active { display: block; }
+      .input, textarea, select {
+        width: 100%; background: #0f1a3a; color: var(--text); border: 1px solid #304277;
+        border-radius: 10px; padding: 10px; margin-top: 8px;
+      }
+      textarea { min-height: 110px; }
+      .btn {
+        margin-top: 10px; border: 1px solid #4f6dc2; background: #28418b; color: #fff;
+        padding: 10px 14px; border-radius: 10px; cursor: pointer;
+      }
+      .timeline { border-left: 2px solid #39549a; margin-left: 8px; padding-left: 14px; }
+      .step { margin: 10px 0; }
+      .dag {
+        height: 220px; border: 1px dashed #3d5698; border-radius: 10px; position: relative; margin-top: 8px;
+      }
+      .node { position: absolute; background: #1d2f67; border: 1px solid #4f6dbf; border-radius: 10px; padding: 8px 10px; font-size: 12px; }
+      .n1 { left: 8%; top: 38%; }
+      .n2 { left: 38%; top: 12%; }
+      .n3 { left: 38%; top: 62%; }
+      .n4 { left: 70%; top: 38%; }
+      .log {
+        height: 220px; overflow: auto; background: #0d1734; border: 1px solid #2c3f72; border-radius: 10px; padding: 10px;
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px;
+      }
+      .footer-note { color: #9db0e8; text-align: center; font-size: 12px; margin: 22px 0 8px; }
+    </style>
+  </head>
+  <body>
+    <div class="app">
+      <div class="header">
+        <div>
+          <div class="title">NEXUS-AGI — Autonomous Multi-Agent Control Plane</div>
+          <div class="subtitle">Preview UI (Dashboard, Task Interface, Agent Monitor, Memory, Tools, Settings)</div>
+        </div>
+        <div class="badge">System: Healthy • 10 Agents Online</div>
+      </div>
+
+      <div class="tabs" id="tabs"></div>
+
+      <section class="section active" id="dashboard">
+        <div class="grid cols-4">
+          <div class="card"><h3>Tasks / Hour</h3><div class="kpi">37</div><div class="muted">+12% vs last hour</div></div>
+          <div class="card"><h3>Success Rate</h3><div class="kpi">93.4%</div><div class="muted">Across last 500 tasks</div></div>
+          <div class="card"><h3>Token Usage</h3><div class="kpi">1.2M</div><div class="muted">Current billing window</div></div>
+          <div class="card"><h3>Estimated Cost</h3><div class="kpi">$128.42</div><div class="muted">Budget cap: $300</div></div>
+        </div>
+        <div class="grid cols-2" style="margin-top:14px;">
+          <div class="card">
+            <h3>Agent Status</h3>
+            <div class="status-row"><span class="row"><span class="dot ok"></span>Researcher</span><span>Running</span></div>
+            <div class="status-row"><span class="row"><span class="dot ok"></span>Coder</span><span>Running</span></div>
+            <div class="status-row"><span class="row"><span class="dot warn"></span>Browser</span><span>Waiting CAPTCHA</span></div>
+            <div class="status-row"><span class="row"><span class="dot ok"></span>Memory</span><span>Idle</span></div>
+            <div class="status-row"><span class="row"><span class="dot bad"></span>Scheduler</span><span>Retrying</span></div>
+          </div>
+          <div class="card">
+            <h3>Live Activity Log</h3>
+            <div class="log">
+[05:40:12] orchestrator.plan selected strategy=react confidence=0.86
+[05:40:13] researcher.web_search query="ml anomaly detector benchmark"
+[05:40:15] researcher.credibility score=0.91 source=arxiv.org
+[05:40:18] coder.write_file path=backend/detector.py
+[05:40:21] coder.run_python exit=0 tests_passed=12
+[05:40:25] critic.score accuracy=88 completeness=91 safety=97
+[05:40:26] orchestrator.checkpoint awaiting_human_approval=true
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="tasks">
+        <div class="grid cols-2">
+          <div class="card">
+            <h3>Natural Language Goal Input</h3>
+            <label>Goal</label>
+            <textarea>Build a Python service that ingests CSV sales data, predicts next month demand, and posts summary to Slack.</textarea>
+            <label>Max Budget ($)</label><input class="input" value="60" />
+            <label>Timeout (minutes)</label><input class="input" value="30" />
+            <label>Planning Strategy</label>
+            <select><option>ReAct Loop</option><option>Tree of Thoughts</option><option>Chain Planner</option><option>MCTS</option></select>
+            <button class="btn">Submit Task</button>
+          </div>
+          <div class="card">
+            <h3>Execution DAG</h3>
+            <div class="dag">
+              <div class="node n1">Goal Intake</div>
+              <div class="node n2">Research Agent</div>
+              <div class="node n3">Data Analyst</div>
+              <div class="node n4">Critic + Finalize</div>
+            </div>
+            <h3 style="margin-top:12px;">Thought Stream</h3>
+            <div class="timeline">
+              <div class="step"><strong>Reason:</strong> Need benchmark datasets + feature engineering approach.</div>
+              <div class="step"><strong>Act:</strong> Query web + ingest CSV sample.</div>
+              <div class="step"><strong>Observe:</strong> MAPE improved from 21% → 12%.</div>
+              <div class="step"><strong>Replan:</strong> Add confidence interval in report.</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="agents">
+        <div class="grid cols-3">
+          <div class="card"><h3>Researcher Agent</h3><div class="muted">Current: Deep source scan</div><div class="kpi">91</div><div class="muted">Quality score</div></div>
+          <div class="card"><h3>Coder Agent</h3><div class="muted">Current: Autodebug loop</div><div class="kpi">14</div><div class="muted">Patches applied</div></div>
+          <div class="card"><h3>Critic Agent</h3><div class="muted">Current: Safety review</div><div class="kpi">95</div><div class="muted">Policy compliance</div></div>
+        </div>
+        <div class="card" style="margin-top:14px;">
+          <h3>Thought / Action / Observation Trace</h3>
+          <div class="log">Researcher: Thought -> prioritize peer-reviewed sources.
+Action -> arxiv_search("time series forecasting retail demand")
+Observation -> top papers retrieved (7), avg citation count 214.
+
+Coder: Thought -> create baseline xgboost model with train/validation split.
+Action -> run_python(train_pipeline.py)
+Observation -> validation MAPE 0.124, no runtime errors.
+
+Critic: Thought -> verify grounded claims and reproducibility.
+Action -> check_facts + critique_output
+Observation -> one unsupported claim flagged for revision.</div>
+        </div>
+      </section>
+
+      <section class="section" id="memory">
+        <div class="grid cols-2">
+          <div class="card">
+            <h3>Memory Explorer</h3>
+            <input class="input" value="find tasks related to demand forecasting" />
+            <button class="btn">Semantic Search</button>
+            <div class="timeline" style="margin-top:12px;">
+              <div class="step">Episode #149 • 2026-02-21 • Critic score: 92</div>
+              <div class="step">Episode #151 • 2026-02-22 • Critic score: 95</div>
+              <div class="step">Procedure matched: "CSV → model → Slack digest"</div>
+            </div>
+          </div>
+          <div class="card">
+            <h3>Knowledge Graph (Preview)</h3>
+            <div class="dag" style="height:260px;">
+              <div class="node" style="left:9%; top:40%;">Retail Sales CSV</div>
+              <div class="node" style="left:40%; top:18%;">XGBoost Model</div>
+              <div class="node" style="left:40%; top:65%;">Forecast Report</div>
+              <div class="node" style="left:72%; top:40%;">Slack Channel</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="tools">
+        <div class="grid cols-2">
+          <div class="card">
+            <h3>Tool Registry</h3>
+            <div class="status-row"><span>web_search</span><span class="muted">v1.0.0 • success 98.1%</span></div>
+            <div class="status-row"><span>run_python</span><span class="muted">v1.0.0 • success 96.7%</span></div>
+            <div class="status-row"><span>query_database</span><span class="muted">v1.0.0 • success 94.4%</span></div>
+            <div class="status-row"><span>send_email</span><span class="muted">v1.0.0 • success 99.0%</span></div>
+            <div class="status-row"><span>create_knowledge_graph</span><span class="muted">v1.0.0 • success 93.8%</span></div>
+          </div>
+          <div class="card">
+            <h3>Test Tool</h3>
+            <label>Tool Name</label>
+            <input class="input" value="run_python" />
+            <label>Payload (JSON)</label>
+            <textarea>{"code": "print('hello from sandbox')"}</textarea>
+            <button class="btn">Execute Test</button>
+            <div class="log" style="margin-top:10px; height:120px;">{"status":"ok","stdout":"hello from sandbox\n","returncode":0}</div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="settings">
+        <div class="grid cols-2">
+          <div class="card">
+            <h3>LLM / Security Settings</h3>
+            <label>Provider</label>
+            <select><option>OpenAI</option><option>Anthropic</option><option>Groq</option><option>Ollama</option></select>
+            <label>Role-Based Access</label>
+            <select><option>admin</option><option>operator</option><option>viewer</option></select>
+            <label>Daily Cost Limit ($)</label><input class="input" value="300" />
+          </div>
+          <div class="card">
+            <h3>Execution Controls</h3>
+            <label>Approval checkpoints</label><select><option>Enabled</option><option>Disabled</option></select>
+            <label>Memory retention (days)</label><input class="input" value="90" />
+            <label>Agent toggles</label>
+            <div class="status-row"><span>Browser Agent</span><span class="badge">Enabled</span></div>
+            <div class="status-row"><span>Tool Builder Agent</span><span class="badge">Enabled</span></div>
+            <div class="status-row"><span>Scheduler Agent</span><span class="badge">Enabled</span></div>
+          </div>
+        </div>
+      </section>
+
+      <div class="footer-note">NEXUS-AGI UI Preview • Static demo shell for design validation</div>
+    </div>
+
+    <script>
+      const tabDefs = [
+        ['dashboard', 'Dashboard'],
+        ['tasks', 'Task Interface'],
+        ['agents', 'Agent Monitor'],
+        ['memory', 'Memory Explorer'],
+        ['tools', 'Tool Registry'],
+        ['settings', 'Settings']
+      ];
+      const tabsEl = document.getElementById('tabs');
+      const sections = Object.fromEntries(tabDefs.map(([id]) => [id, document.getElementById(id)]));
+
+      function activate(id) {
+        document.querySelectorAll('.tab').forEach((el) => el.classList.remove('active'));
+        document.querySelector(`[data-id="${id}"]`)?.classList.add('active');
+        Object.values(sections).forEach((sec) => sec.classList.remove('active'));
+        sections[id].classList.add('active');
+        history.replaceState(null, '', `#${id}`);
+      }
+
+      tabDefs.forEach(([id, label]) => {
+        const b = document.createElement('button');
+        b.className = 'tab';
+        b.textContent = label;
+        b.dataset.id = id;
+        b.onclick = () => activate(id);
+        tabsEl.appendChild(b);
+      });
+
+      const initial = location.hash.replace('#', '') || 'dashboard';
+      activate(tabDefs.some(([id]) => id === initial) ? initial : 'dashboard');
+    </script>
+  </body>
+</html>
