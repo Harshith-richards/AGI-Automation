@@ -53,6 +53,14 @@ npm run dev -- --host 0.0.0.0 --port 5173
 
 Open `http://127.0.0.1:5173`.
 
+
+### 2b) Zero-install UI preview (no npm needed)
+```bash
+cd nexus-agi/frontend
+python -m http.server 4173
+```
+Open `http://127.0.0.1:4173`.
+
 ### 3) Full stack with Docker Compose
 ```bash
 cd nexus-agi
